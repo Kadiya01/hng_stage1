@@ -10,12 +10,9 @@ from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Depends, Query, Request
-
 
 # 1. Setup & Config
-DOTENV_PATH = ".env.local" if os.path.exists(".env.local") else ".env"
-load_dotenv(DOTENV_PATH)
+load_dotenv(".env.local")
 DATABASE_URL = os.getenv("POSTGRES_URL", "").replace("postgres://", "postgresql://", 1)
 
 engine = create_engine(DATABASE_URL)
@@ -24,16 +21,7 @@ Base = declarative_base()
 
 app = FastAPI()
 
-from fastapi.responses import JSONResponse
-
-@app.exception_handler(HTTPException)
-async def custom_http_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"status": "error", "message": exc.detail},
-    )
-
-# IMPORTANT: CORS 
+# IMPORTANT: CORS for HNG Grading
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -105,40 +93,27 @@ async def fetch_external_data(name: str):
 
 # 4. Endpoints
 @app.post("/api/profiles", status_code=201)
-async def create_profile(request: Request, db: Session = Depends(get_db)):
-    # 1. Manually get the JSON to avoid automatic 422 errors
-    try:
-        payload = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON format")
-
-    name = payload.get("name")
-    
-    # 2. Check for missing or empty name (Required 400)
-    if not name or not isinstance(name, str) or name.strip() == "":
+async def create_profile(payload: dict, db: Session = Depends(get_db)):
+    name = payload.get("name", "").strip().lower()
+    if not name:
         raise HTTPException(status_code=400, detail="Missing or empty name")
     
-    name = name.strip().lower()
-
-    # 3. Idempotency Check
+    # Idempotency Check
     existing = db.query(Profile).filter(Profile.name == name).first()
     if existing:
         return {"status": "success", "message": "Profile already exists", "data": existing}
     
-    # 4. Call external APIs (This is where the 502 happens)
-    # The 'fetch_external_data' function we wrote handles the 502s
+    # Fetch data and save
     ext_data = await fetch_external_data(name)
-    
-    # 5. Save to DB
     new_profile = Profile(
         id=str(uuid6.uuid7()),
         name=name,
+        created_at=datetime.now(timezone.utc),
         **ext_data
     )
     db.add(new_profile)
     db.commit()
     db.refresh(new_profile)
-    
     return {"status": "success", "data": new_profile}
 
 @app.get("/api/profiles")
