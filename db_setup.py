@@ -1,14 +1,18 @@
 import os
+import uuid
 from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
-# Load the variables from the .env.local file you just pulled
 load_dotenv(".env.local")
 
-# Vercel gives us 'postgres://', but SQLAlchemy needs 'postgresql://'
+# 1. Load the variables from your local env file
+load_dotenv(".env.local")
+
+
+# 2. Database Connection Setup
 DATABASE_URL = os.getenv("POSTGRES_URL")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -17,23 +21,35 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# 3. The Updated Profile Model (HNG Stage 2 Requirements)
 class Profile(Base):
     __tablename__ = "profiles"
-    id = Column(String, primary_key=True, index=True) # UUID v7
-    name = Column(String, unique=True, index=True)
+    
+    # Primary Key - Requirement: UUID v7
+    id = Column(String, primary_key=True, index=True) 
+    
+    # Person's Details - Requirement: UNIQUE Name
+    name = Column(String, unique=True, index=True, nullable=False)
     gender = Column(String)
     gender_probability = Column(Float)
-    sample_size = Column(Integer)
+    
+    # Age Details
     age = Column(Integer)
-    age_group = Column(String)
-    country_id = Column(String)
+    age_group = Column(String) # child, teenager, adult, senior
+    
+    # Country Details - Requirement: ISO code (2 chars) + Full Name
+    country_id = Column(String(2)) 
+    country_name = Column(String)
     country_probability = Column(Float)
+    
+    # Timestamp - Requirement: UTC ISO 8601
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-# This line actually creates the table in Vercel Postgres!
+# 4. Database Initializer
 def init_db():
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    print("Database tables created successfully!")
+    print("Database tables synchronized with Stage 2 requirements!")
 
 if __name__ == "__main__":
     init_db()
