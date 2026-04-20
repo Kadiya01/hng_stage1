@@ -6,13 +6,10 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
-# 1. Load the variables from your local env file
 load_dotenv(".env.local")
 
-#load_dotenv(".env.local")
-# Add these temporary lines:
-print(f"Current Directory: {os.getcwd()}")
-print(f"Database URL from Env: {os.getenv('POSTGRES_URL')}")
+# 1. Load the variables from your local env file
+load_dotenv(".env.local")
 
 
 # 2. Database Connection Setup
