@@ -64,4 +64,20 @@ def seed_data():
             db.commit()
             print(f" Successfully added {added_count} new profiles to the database!")
         else:
-            prin
+            print(" No new profiles to add.")
+        
+        if skipped_count > 0:
+            print(f" Skipped {skipped_count} profiles (already exist).")
+        
+        print(" Database seeding complete!")
+        
+    except Exception as e:
+        print(f" Error during seeding: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    clear_database()
+    seed_data()
+    seed_data()
