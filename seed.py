@@ -1,7 +1,7 @@
 import json
 import uuid6
-from models import Profile
-from db_setup import SessionLocal
+from api.models import Profile
+from api.db_setup import SessionLocal
 
 def clear_database():
     """Delete all profiles from the database"""
@@ -9,9 +9,9 @@ def clear_database():
     try:
         deleted_count = db.query(Profile).delete()
         db.commit()
-        print(f"✓ Cleared {deleted_count} profiles from the database.")
+        print(f" Cleared {deleted_count} profiles from the database.")
     except Exception as e:
-        print(f"✗ Error clearing database: {e}")
+        print(f" Error clearing database: {e}")
         db.rollback()
     finally:
         db.close()
@@ -26,10 +26,10 @@ def seed_data():
         # Access the 'profiles' key from the JSON structure
         profiles_list = full_data.get("profiles", [])
         
-        print(f"✓ Found {len(profiles_list)} profiles in the JSON file.")
+        print(f" Found {len(profiles_list)} profiles in the JSON file.")
 
         if not profiles_list:
-            print("✗ No profiles found inside the 'profiles' key!")
+            print(" No profiles found inside the 'profiles' key!")
             return
 
         # Get all existing names in one query for idempotency
@@ -69,22 +69,22 @@ def seed_data():
             # Batch insert for better performance
             db.add_all(new_profiles)
             db.commit()
-            print(f"✓ Successfully added {added_count} new profiles to the database!")
+            print(f" Successfully added {added_count} new profiles to the database!")
             # Show a few example names
             example_names = [p.name for p in new_profiles[:5]]
             print(f"  Examples: {', '.join(example_names)}")
         else:
-            print("⚠ No new profiles to add.")
+            print(" No new profiles to add.")
         
         if skipped_count > 0:
-            print(f"⚠ Skipped {skipped_count} profiles (already exist).")
+            print(f" Skipped {skipped_count} profiles (already exist).")
         
         print("✓ Database seeding complete!")
         
     except FileNotFoundError:
-        print("✗ Error: seed_profiles.json file not found!")
+        print(" Error: seed_profiles.json file not found!")
     except Exception as e:
-        print(f"✗ Error during seeding: {e}")
+        print(f" Error during seeding: {e}")
         db.rollback()
     finally:
         db.close()
