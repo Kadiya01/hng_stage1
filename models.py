@@ -24,3 +24,5 @@ class Profile(Base):
     
     # Timestamp
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utcnow))
+
+  
