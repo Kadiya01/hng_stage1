@@ -5,6 +5,7 @@ import asyncio
 import httpx
 from datetime import datetime, timezone
 from typing import Optional, List
+from models import Profile, Base 
 from fastapi import FastAPI, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -384,3 +385,7 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     db.delete(profile)
     db.commit()
     return None
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "message": "Server is running, database connection pending"}
