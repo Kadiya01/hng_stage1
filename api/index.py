@@ -387,6 +387,6 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     db.commit()
     return None
 
-@app.get("/health")
+@app.get("api//health")
 def health():
     return {"status": "ok", "message": "Server is running, database connection pending"}
