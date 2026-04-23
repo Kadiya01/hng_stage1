@@ -209,7 +209,7 @@ def parse_natural_language_query(query: str) -> dict:
 def startup():
     Base.metadata.create_all(bind=engine)
 
-@app.post("/profiles", status_code=201)
+@app.post("/api/profiles", status_code=201)
 async def create_profile(request: Request, db: Session = Depends(get_db)):
     """Create a new profile (Stage 1)"""
     try:
@@ -241,7 +241,7 @@ async def create_profile(request: Request, db: Session = Depends(get_db)):
     
     return {"status": "success", "data": new_profile}
 
-@app.get("/profiles")
+@app.get("/api/profiles")
 def get_all_profiles(
     gender: Optional[str] = Query(None),
     age_group: Optional[str] = Query(None),
@@ -316,7 +316,7 @@ def get_all_profiles(
         "data": profiles
     }
 
-@app.get("/profiles/search")
+@app.get("/api/profiles/search")
 def search_profiles(
     q: str = Query(...),
     page: int = Query(1, ge=1),
@@ -369,7 +369,7 @@ def search_profiles(
         "data": profiles
     }
 
-@app.get("/profiles/{profile_id}")
+@app.get("/api/profiles/{profile_id}")
 def get_profile(profile_id: str, db: Session = Depends(get_db)):
     """Get a specific profile by ID"""
     profile = db.query(Profile).filter(Profile.id == profile_id).first()
@@ -377,7 +377,7 @@ def get_profile(profile_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Profile not found")
     return {"status": "success", "data": profile}
 
-@app.delete("/profiles/{profile_id}", status_code=204)
+@app.delete("/api/profiles/{profile_id}", status_code=204)
 def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     """Delete a profile by ID"""
     profile = db.query(Profile).filter(Profile.id == profile_id).first()
@@ -387,6 +387,6 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     db.commit()
     return None
 
-@app.get("api//health")
+@app.get("/api/health")
 def health():
     return {"status": "ok", "message": "Server is running, database connection pending"}
