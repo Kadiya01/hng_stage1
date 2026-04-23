@@ -5,7 +5,8 @@ import asyncio
 import httpx
 from datetime import datetime, timezone
 from typing import Optional, List
-from models import Profile, Base 
+from api.models import Profile, Base 
+from api.db_setup import SessionLocal, engine
 from fastapi import FastAPI, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,9 +21,9 @@ DOTENV_PATH = ".env.local" if os.path.exists(".env.local") else ".env"
 load_dotenv(DOTENV_PATH)
 DATABASE_URL = os.getenv("POSTGRES_URL", "").replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+# engine = create_engine(DATABASE_URL)
+# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Base = declarative_base()
 
 app = FastAPI()
 
@@ -42,18 +43,18 @@ app.add_middleware(
 )
 
 # 2. Database Model - Stage 2 Requirements
-class Profile(Base):
-    __tablename__ = "profiles"
-    id = Column(String, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True, nullable=False)
-    gender = Column(String)
-    gender_probability = Column(Float)
-    age = Column(Integer)
-    age_group = Column(String)
-    country_id = Column(String, index=True)
-    country_name = Column(String)
-    country_probability = Column(Float)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+# class Profile(Base):
+#     __tablename__ = "profiles"
+#     id = Column(String, primary_key=True, index=True)
+#     name = Column(String, unique=True, index=True, nullable=False)
+#     gender = Column(String)
+#     gender_probability = Column(Float)
+#     age = Column(Integer)
+#     age_group = Column(String)
+#     country_id = Column(String, index=True)
+#     country_name = Column(String)
+#     country_probability = Column(Float)
+#     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
 # Dependency to get DB session
 def get_db():
@@ -208,7 +209,7 @@ def parse_natural_language_query(query: str) -> dict:
 def startup():
     Base.metadata.create_all(bind=engine)
 
-@app.post("/api/profiles", status_code=201)
+@app.post("/profiles", status_code=201)
 async def create_profile(request: Request, db: Session = Depends(get_db)):
     """Create a new profile (Stage 1)"""
     try:
@@ -240,7 +241,7 @@ async def create_profile(request: Request, db: Session = Depends(get_db)):
     
     return {"status": "success", "data": new_profile}
 
-@app.get("/api/profiles")
+@app.get("/profiles")
 def get_all_profiles(
     gender: Optional[str] = Query(None),
     age_group: Optional[str] = Query(None),
@@ -315,7 +316,7 @@ def get_all_profiles(
         "data": profiles
     }
 
-@app.get("/api/profiles/search")
+@app.get("/profiles/search")
 def search_profiles(
     q: str = Query(...),
     page: int = Query(1, ge=1),
@@ -368,7 +369,7 @@ def search_profiles(
         "data": profiles
     }
 
-@app.get("/api/profiles/{profile_id}")
+@app.get("/profiles/{profile_id}")
 def get_profile(profile_id: str, db: Session = Depends(get_db)):
     """Get a specific profile by ID"""
     profile = db.query(Profile).filter(Profile.id == profile_id).first()
@@ -376,7 +377,7 @@ def get_profile(profile_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Profile not found")
     return {"status": "success", "data": profile}
 
-@app.delete("/api/profiles/{profile_id}", status_code=204)
+@app.delete("/profiles/{profile_id}", status_code=204)
 def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     """Delete a profile by ID"""
     profile = db.query(Profile).filter(Profile.id == profile_id).first()
@@ -386,6 +387,6 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     db.commit()
     return None
 
-@app.get("/api/health")
+@app.get("/health")
 def health():
     return {"status": "ok", "message": "Server is running, database connection pending"}

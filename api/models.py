@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, Float, DateTime
 from datetime import datetime, timezone
-from db_setup import Base 
+from api.db_setup import Base 
 
 class Profile(Base):
     __tablename__ = "profiles"
