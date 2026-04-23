@@ -5,8 +5,8 @@ import asyncio
 import httpx
 from datetime import datetime, timezone
 from typing import Optional, List
-from .models import Profile, Base 
-from .db_setup import SessionLocal, engine
+from models import Profile, Base 
+from db_setup import SessionLocal, engine
 from fastapi import FastAPI, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
