@@ -71,7 +71,6 @@ load_dotenv(".env.local" if os.path.exists(".env.local") else ".env")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
 # Fallback to sqlite when no DATABASE_URL provided (helps Vercel deployments without a DB)
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -95,7 +94,6 @@ DATABASE_URL = os.getenv("POSTGRES_URL", "").replace("postgres://", "postgresql:
 # Base = declarative_base()
 
 app = FastAPI()
-
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request, exc):
     return JSONResponse(
