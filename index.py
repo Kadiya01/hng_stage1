@@ -5,8 +5,8 @@ import asyncio
 import httpx
 from datetime import datetime, timezone
 from typing import Optional, List
-from .models import Profile, Base 
-from .db_setup import SessionLocal, engine
+# from .models import Profile, Base 
+# from .db_setup import SessionLocal, engine
 from fastapi import FastAPI, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -15,7 +15,76 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
+from sqlalchemy import Column, String, Integer, Float, DateTime
+from datetime import datetime, timezone
+from db_setup import Base
 
+class Profile(Base):
+    __tablename__ = "profiles"
+    
+    # Primary Key
+    id = Column(String, primary_key=True, index=True) 
+    
+    # User Details
+    name = Column(String, unique=True, index=True, nullable=False)
+    gender = Column(String)
+    gender_probability = Column(Float)
+    
+    # Age Details
+    age = Column(Integer)
+    age_group = Column(String) 
+    
+    # Country Details
+    country_id = Column(String(2)) 
+    country_name = Column(String)
+    country_probability = Column(Float)
+    
+    # Timestamp
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "gender": self.gender,
+            "gender_probability": self.gender_probability,
+            "age": self.age,
+            "age_group": self.age_group,
+            "country_id": self.country_id,
+            "country_name": self.country_name,
+            "country_probability": self.country_probability,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+import os
+import uuid6
+from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv(".env.local" if os.path.exists(".env.local") else ".env")
+
+# Database connection
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Fallback to sqlite when no DATABASE_URL provided (helps Vercel deployments without a DB)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Database initializer
+def init_db():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    print("Database tables synchronized with Stage 2 requirements!")
+
+if __name__ == "__main__":
+    init_db()
 # 1. Setup & Config
 DOTENV_PATH = ".env.local" if os.path.exists(".env.local") else ".env"
 load_dotenv(DOTENV_PATH)
